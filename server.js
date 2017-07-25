@@ -80,11 +80,21 @@ app.put('/api/todos/:id', function update(req, res) {
    */
 });
 
+// delete todo
 app.delete('/api/todos/:id', function destroy(req, res) {
-  /* This endpoint will delete a single todo with the
-   * id specified in the route parameter (:id) and respond
-   * with success.
-   */
+  // get todo id from url params (`req.params`)
+  let todoId = parseInt(req.params.id);
+
+  // find todo to delete by its id
+  let todoToDelete = data.filter(function (todo) {
+    return todo._id === todoId;
+  })[0];
+
+  // remove todo from `todos` array
+  data.splice(data.indexOf(todoToDelete), 1);
+
+  // send back deleted todo
+  res.json(todoToDelete);
 });
 
 /**********
