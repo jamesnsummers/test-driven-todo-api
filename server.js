@@ -14,7 +14,7 @@ app.use(express.static(__dirname + '/public'));
  ************/
 
 // our database is an array for now with some hardcoded values
-var data = [
+var todos = [
   { _id: 7, task: 'Laundry', description: 'Wash clothes' },
   { _id: 27, task: 'Grocery Shopping', description: 'Buy dinner for this week' },
   { _id: 44, task: 'Homework', description: 'Make this app super awesome!' }
@@ -28,10 +28,9 @@ var data = [
  * HTML Endpoints
  */
 
-app.get('/api/todos', function homepage(req, res) {
-  res.json({ data: data});
-});
-
+ app.get('/', function homepage(req, res) {
+   res.sendFile(__dirname + '/views/index.html');
+ });
 
 /*
  * JSON API Endpoints
@@ -43,41 +42,58 @@ app.get('/api/todos', function homepage(req, res) {
  * ORDER THAT THE TESTS DICTATE.
  */
 
-app.get('/api/todos/search', function search(req, res) {
-  /* This endpoint responds with the search results from the
-   * query in the request. COMPLETE THIS ENDPOINT LAST.
-   */
-});
+ app.get('/api/todos/search', function search(req, res) {
+   let searchTerm = req.query.q;
+   console.log(searchTerm);
+   let filteredTodos = todos.filter(function(todo){
+     return(todo.task.toLowerCase().includes(searchTerm.toLowerCase()) || todo.description.toLowerCase().includes(searchTerm.toLowerCase()));
+   });
+   res.json({data : filteredTodos});
+ });
 
-app.get('/api/todos', function index(req, res) {
-  /* This endpoint responds with all of the todos
-   */
-});
+
+ // get all todos
+ app.get('/api/todos', function index(req, res) {
+   // send all todos as JSON response
+   res.json({ data: todos });
+ });
 
 app.post('/api/todos', function create(req, res) {
   var newTodo = req.body;
-  if (data.length > 0) {
-    newTodo._id = data[data.length - 1]._id + 1;
+  if (todos.length > 0) {
+    newTodo._id = todos[todos.length - 1]._id + 1;
   } else {
     newTodo._id = 1
   }
-  data.push(newTodo);
+  todos.push(newTodo);
   res.json(newTodo);
 });
 
 app.get('/api/todos/:id', function show(req, res) {
   var todoId = parseInt(req.params.id);
-  var foundTodo = data.filter(function (todo) {
+  var foundTodo = todos.filter(function (todo) {
     return todo._id == todoId;
   })[0];
   res.json(foundTodo);
 });
 
+// update todo
 app.put('/api/todos/:id', function update(req, res) {
-  /* This endpoint will update a single todo with the
-   * id specified in the route parameter (:id) and respond
-   * with the newly updated todo.
-   */
+  // get todo id from url params (`req.params`)
+  let todoId = parseInt(req.params.id);
+
+  // find todo to update by its id
+  let todoToUpdate = todos.filter(function (todo) {
+    return todo._id === todoId;
+  })[0];
+
+  // update the todo's task
+  todoToUpdate.task = req.body.task;
+
+  // update the todo's description
+  todoToUpdate.description = req.body.description;
+
+  res.json(todoToUpdate);
 });
 
 // delete todo
@@ -86,12 +102,12 @@ app.delete('/api/todos/:id', function destroy(req, res) {
   let todoId = parseInt(req.params.id);
 
   // find todo to delete by its id
-  let todoToDelete = data.filter(function (todo) {
+  let todoToDelete = todos.filter(function (todo) {
     return todo._id === todoId;
   })[0];
 
   // remove todo from `todos` array
-  data.splice(data.indexOf(todoToDelete), 1);
+  todos.splice(todos.indexOf(todoToDelete), 1);
 
   // send back deleted todo
   res.json(todoToDelete);
